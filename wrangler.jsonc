@@ -1,5 +1,7 @@
 {
   "name": "golfscoreapp",
   "compatibility_date": "2026-11-01",
-  "assets": { "directory": "./public" }
+  "assets": { "directory": "./public" },
+  // 確認用(プレビュー)のビルドに必要。中身は空でよい。
+  "previews": {}
 }
