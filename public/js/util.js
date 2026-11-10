@@ -1,6 +1,6 @@
 // 共通の小さな関数。画面にも保存にも依存しない。
 
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION = '0.1.1';
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
