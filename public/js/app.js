@@ -74,12 +74,17 @@ let lastHash = null;
 
 function render() {
   const blocked = store.getBlocked();
-  if (blocked) {
-    view.innerHTML = `<header class="bar"><h1>ゴルフスコア</h1></header><p class="err" role="alert">${esc(blocked)}</p>`;
+  const parsed = parse();
+  if (blocked && parsed.key !== 'backup') {
+    view.innerHTML =
+      `<header class="bar"><h1>ゴルフスコア</h1></header><p class="err" role="alert">${esc(blocked)}</p>` +
+      '<p class="note">バックアップのファイルがあれば、そこから戻せます。</p><a class="btn wide" href="#/backup">バックアップから復元</a>';
     tabs.innerHTML = '';
+    current = null;
+    lastHash = location.hash;
     return;
   }
-  const { key, arg } = parse();
+  const { key, arg } = parsed;
   const route = routes[key];
   const moved = location.hash !== lastHash;
   if (moved) {

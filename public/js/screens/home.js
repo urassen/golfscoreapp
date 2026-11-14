@@ -1,5 +1,7 @@
 // ホーム: 直近10回(全コース・18ホール)の平均・ベスト・パット平均、ミニグラフ、取り込むボタン。
-import { getState } from '../store.js';
+import { backupStale, getSettings, getState } from '../store.js';
+import { rerender } from '../ui.js';
+import { shareBackup } from './backupaction.js';
 import { filterRounds, num1, summarize } from '../stats.js';
 import { stackedBars } from '../charts.js';
 
@@ -28,5 +30,30 @@ export function render() {
       body += `<a class="card link" href="#/stats" aria-label="統計を開く"><h2>スコア推移</h2>${stackedBars(s.lines, { mini: true })}</a>`;
     }
   }
-  return `<header class="bar"><h1>ホーム</h1></header>${body}<a class="btn primary wide" href="#/import">取り込む</a>`;
+  return `<header class="bar"><h1>ホーム</h1></header>${band()}${body}<a class="btn primary wide" href="#/import">取り込む</a>`;
+}
+
+let bandError = '';
+
+function band() {
+  if (!backupStale()) return '';
+  const text = getSettings().lastBackupAt ? 'バックアップが古くなっています。' : 'まだバックアップしていません。';
+  return (
+    `<div class="band" role="alert"><p>${text}</p>` +
+    '<button class="btn primary" data-act="backup">バックアップする</button>' +
+    (bandError ? `<p class="err">${bandError}</p>` : '') +
+    '</div>'
+  );
+}
+
+export async function onClick(e) {
+  if (!e.target.closest('[data-act="backup"]')) return;
+  bandError = '';
+  const res = await shareBackup();
+  if (!res.ok && res.error) bandError = res.error;
+  rerender();
+}
+
+export function enter() {
+  bandError = '';
 }

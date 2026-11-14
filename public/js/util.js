@@ -1,6 +1,6 @@
 // 共通の小さな関数。画面にも保存にも依存しない。
 
-export const APP_VERSION = '0.1.1';
+export const APP_VERSION = '0.2.0';
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
@@ -54,4 +54,12 @@ export function halfLabel(nines, idx) {
   const base = idx === 0 ? '前半' : '後半';
   const n = (nines || [])[idx];
   return n ? `${base} ${n}` : base;
+}
+
+/** 日時の表示。「2026/11/14 13:30」(端末の時刻)。読めなければ空。 */
+export function fmtDateTime(iso) {
+  const d = new Date(iso);
+  if (!iso || Number.isNaN(d.getTime())) return '';
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
