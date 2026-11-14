@@ -105,3 +105,13 @@ export function rateText(hit, n) {
 export function num1(v) {
   return v == null ? '-' : (Math.round(v * 10) / 10).toFixed(1);
 }
+
+/**
+ * 履歴の絞り込み。companionIds の全員が一緒だったラウンド(ほかの人がいてもよい)と、年。
+ * 新しい順で返す。
+ */
+export function filterHistory(state, { companionIds = [], year = '' } = {}) {
+  return sortedRounds(state).filter(
+    (r) => companionIds.every((id) => r.companionIds.includes(id)) && (!year || r.date.startsWith(year))
+  );
+}

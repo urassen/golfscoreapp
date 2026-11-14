@@ -1,7 +1,7 @@
 // 一括取り込みの処理(基本設計仕様書「5 一括取り込みの処理」の10段階)。
 // 画面にも保存にも依存しない。state は引数で受け取る。
 import { AppError, migrateImport } from './schema.js';
-import { CLUBS, DIR_PAR3, DIR_PAR45, dirValid, isNum, normName, uid } from './util.js';
+import { CLUBS, DIR_PAR3, DIR_PAR45, clone, dirValid, isNum, normName, uid } from './util.js';
 import { strokeTotal } from './model.js';
 
 const posInt = (v) => (isNum(v) && Number.isInteger(v) && v > 0 ? v : null);
@@ -30,12 +30,41 @@ function extractJson(text) {
  * 成功すると「下書き(draft)」を返す。失敗は AppError を投げる(message が理由)。
  */
 export function parseImport(text) {
-  let obj = extractJson(text);
+  const obj = extractJson(text);
   if (obj.type === 'golf-backup') {
     throw fail('backup', 'これはバックアップのデータです(設定の「バックアップ・リストア」から戻してください)');
   }
   if (obj.type !== 'golf-round') throw fail('format', '形式が正しくありません');
-  obj = migrateImport(obj);
+  return roundDraft(obj);
+}
+
+/**
+ * まとめ取り込み(golf-rounds)と1ラウンド(golf-round)の両方を読む。
+ * 全体が読めないときは AppError を投げる。
+ * ラウンドごとに [{ draft }] か [{ error }] を返す(読めないラウンドがあっても、ほかは取り込める)。
+ */
+export function parseImportAll(text) {
+  const obj = extractJson(text);
+  if (obj.type === 'golf-backup') {
+    throw fail('backup', 'これはバックアップのデータです(設定の「バックアップ・リストア」から戻してください)');
+  }
+  if (obj.type === 'golf-round') return [{ draft: roundDraft(obj) }];
+  if (obj.type !== 'golf-rounds') throw fail('format', '形式が正しくありません');
+  const top = migrateImport(obj);
+  if (!Array.isArray(top.rounds) || !top.rounds.length) throw fail('rounds', 'ラウンドがありません');
+  return top.rounds.map((r) => {
+    try {
+      if (!r || typeof r !== 'object' || Array.isArray(r)) throw fail('format', '形式が正しくありません');
+      return { draft: roundDraft({ ...r, type: 'golf-round', schema: isNum(r.schema) ? r.schema : top.schema }) };
+    } catch (e) {
+      return { error: (e && e.message) || '形式が正しくありません' };
+    }
+  });
+}
+
+/** 1ラウンド分のデータ(type は確かめ済み)から下書きを作る。 */
+function roundDraft(src) {
+  const obj = migrateImport(src);
 
   if (typeof obj.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(obj.date)) {
     throw fail('date', '日付がありません');
@@ -321,4 +350,55 @@ export function register(state, d) {
     state.rounds.push(round);
   }
   return round.id;
+}
+
+/** コースの見分け用のキー(新規登録のコースは施設名・名称・ホール数で見分ける)。 */
+export function courseKey(d) {
+  if (d.courseSel !== 'new') return d.courseSel;
+  return `new:${normName(d.facility)}|${draftNines(d).map(normName).join('|')}|${d.holeCount}`;
+}
+
+/** まとめ取り込みの中で、前のラウンドと同じ日付・コース・ホール数のものの番号を返す。なければ -1。 */
+export function batchDuplicateOf(items, i) {
+  const d = items[i].draft;
+  if (!d) return -1;
+  for (let j = 0; j < i; j++) {
+    const e = items[j].draft;
+    if (e && e.date === d.date && e.holeCount === d.holeCount && courseKey(e) === courseKey(d)) return j;
+  }
+  return -1;
+}
+
+/** 新規登録のつもりのコース・同伴者を、今の state(前のラウンドで作ったものを含む)に合わせる。 */
+export function rematch(state, d) {
+  if (d.courseSel === 'new') {
+    const m = matchCourse(state, d.facility, draftNines(d), d.holeCount);
+    if (m) {
+      d.courseSel = m.id;
+      applyCourseDefaults(d, m);
+    }
+  }
+  for (const p of d.players) {
+    if (p.self || p.sel !== 'new') continue;
+    const c = matchCompanion(state, p.name);
+    if (c) p.sel = c.id;
+  }
+}
+
+/**
+ * まとめて登録する。state を書き換え、登録したラウンドの番号の一覧を返す。
+ * 登録できないラウンド(要確認・重複など)は飛ばす。drafts は書き換えない。
+ */
+export function registerBatch(state, items) {
+  const done = [];
+  items.forEach((item, i) => {
+    if (!item.draft || batchDuplicateOf(items, i) >= 0) return;
+    const d = clone(item.draft);
+    rematch(state, d);
+    if (!issues(state, d).canRegister) return;
+    if (d.fixCourse) fixCourse(state, d);
+    register(state, d);
+    done.push(i);
+  });
+  return done;
 }

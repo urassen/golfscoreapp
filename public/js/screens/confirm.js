@@ -21,6 +21,17 @@ import { editorTitle, openEditor } from './editor.js';
 
 const HEAD =
   '<header class="bar"><a class="back" href="#/import">‹取り込み</a><h1>確認</h1><button class="act" data-act="cancel">キャンセル</button></header>';
+const HEAD_BATCH = (i, n) =>
+  `<header class="bar"><a class="back" href="#/batch">‹一覧</a><h1>確認 ${i + 1}/${n}</h1><span class="act"></span></header>`;
+
+/** arg があればまとめ取り込みの arg 番目、なければ1ラウンドの下書き。 */
+function current(arg) {
+  if (arg != null && box.batch) {
+    const i = Number(arg);
+    return { d: box.batch[i]?.draft || null, i, batch: true };
+  }
+  return { d: box.draft, i: -1, batch: false };
+}
 
 function viewPlayers(d) {
   return activePlayers(d).map((p) => ({ key: p.key, name: p.self ? '自分' : p.name }));
@@ -37,7 +48,7 @@ function bands(d, info) {
       '<div class="row wrap">' +
       `<button class="btn ${d.dupChoice === 'overwrite' ? 'on' : ''}" data-act="dup-overwrite">上書き</button>` +
       `<button class="btn ${d.dupChoice === 'add' ? 'on' : ''}" data-act="dup-add">別ラウンドとして追加</button>` +
-      '<button class="btn" data-act="cancel">中止</button></div></div>';
+      '<button class="btn" data-act="dup-stop">中止</button></div></div>';
   }
   if (info.totalMismatch) {
     out +=
@@ -108,10 +119,11 @@ function blockReason(d, info) {
   return '';
 }
 
-export function render() {
-  const d = box.draft;
+export function render(arg) {
+  const { d, i, batch } = current(arg);
+  const head = batch ? HEAD_BATCH(i, box.batch.length) : HEAD;
   if (!d) {
-    return HEAD + '<p class="note center">取り込むデータがありません。</p><a class="btn wide" href="#/import">取り込みへ</a>';
+    return head + '<p class="note center">取り込むデータがありません。</p><a class="btn wide" href="#/import">取り込みへ</a>';
   }
   const st = getState();
   const info = issues(st, d);
@@ -119,14 +131,16 @@ export function render() {
   const label = course ? courseLabel(course) : courseLabel({ facility: d.facility, nines: draftNines(d) });
   const reason = blockReason(d, info);
   return (
-    HEAD +
+    head +
     `<div class="sticky mini">${esc(d.date.replace(/-/g, '/'))} ${esc(label)} ${d.holeCount}H</div>` +
     bands(d, info) +
     infoForm(st, d) +
     '<p class="note">直したいセルをタップしてください。黄色のセルは要確認です。</p>' +
     `<div id="tables">${scoreTables({ players: viewPlayers(d), holes: draftHoles(d), nines: draftNines(d) }, { editable: true })}</div>` +
     `<div class="footer">${reason ? `<p>${esc(reason)}</p>` : ''}` +
-    `<button class="btn primary wide" data-act="register" ${info.canRegister ? '' : 'disabled'}>登録</button></div>`
+    (batch
+      ? '<button class="btn primary wide" data-act="back-list">一覧に戻る</button></div>'
+      : `<button class="btn primary wide" data-act="register" ${info.canRegister ? '' : 'disabled'}>登録</button></div>`)
   );
 }
 
@@ -136,8 +150,8 @@ function resetCourseFlags(d) {
   d.fixCourse = false;
 }
 
-export function onChange(e) {
-  const d = box.draft;
+export function onChange(e, arg) {
+  const { d } = current(arg);
   const f = e.target.dataset.f;
   if (!d || !f) return;
   const st = getState();
@@ -162,12 +176,22 @@ export function onChange(e) {
   rerender();
 }
 
-export async function onClick(e) {
-  const d = box.draft;
+export async function onClick(e, arg) {
+  const { d, i, batch } = current(arg);
   const act = e.target.closest('[data-act]')?.dataset.act;
-  if (act === 'cancel') {
+  if (act === 'cancel' || (act === 'dup-stop' && !batch)) {
     clearBox();
     return go('#/import');
+  }
+  if (act === 'back-list') return go('#/batch');
+  if (act === 'dup-stop' && batch) {
+    // まとめ取り込みでは、このラウンドだけ取り込まない。
+    box.batch.splice(i, 1);
+    if (!box.batch.length) {
+      clearBox();
+      return go('#/import');
+    }
+    return go('#/batch');
   }
   if (!d) return;
   if (act === 'dup-overwrite' || act === 'dup-add') {
@@ -191,7 +215,7 @@ export async function onClick(e) {
     d.fixCourse = act === 'mm-fix';
     return rerender();
   }
-  if (act === 'register') {
+  if (act === 'register' && !batch) {
     const res = await trySave((s) => {
       if (d.fixCourse) fixCourse(s, d);
       return register(s, d);

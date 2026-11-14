@@ -7,6 +7,7 @@ import * as history from './screens/history.js';
 import * as detail from './screens/detail.js';
 import * as imp from './screens/import.js';
 import * as confirm from './screens/confirm.js';
+import * as batch from './screens/batch.js';
 import * as statsview from './screens/statsview.js';
 import * as settings from './screens/settings.js';
 import * as courses from './screens/courses.js';
@@ -19,6 +20,7 @@ const routes = {
   round: { tab: 'history', ...pick(detail) },
   import: { tab: 'import', ...pick(imp) },
   confirm: { tab: 'import', ...pick(confirm) },
+  batch: { tab: 'import', ...pick(batch) },
   stats: { tab: 'stats', ...pick(statsview) },
   settings: { tab: 'settings', ...pick(settings) },
   courses: { tab: 'settings', render: courses.render },

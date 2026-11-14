@@ -94,6 +94,16 @@ small { color: var(--sub); }
 .center { text-align: center; }
 .err { color: var(--danger); font-size: 14px; }
 .warn { color: #9a6b00; }
+.chip { min-height: 40px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--accent); background: var(--card); color: var(--accent); font: inherit; font-size: 15px; }
+.chip.add { min-width: 44px; font-size: 20px; padding: 0 12px; }
+.flabel { font-size: 13px; color: var(--sub); min-width: 48px; }
+.filters .row { margin: 4px 0; }
+.count { justify-content: space-between; margin: 8px 0; color: var(--sub); }
+.btn.small { min-height: 36px; padding: 4px 14px; font-size: 14px; }
+.choices.names { grid-template-columns: repeat(2, 1fr); }
+.okmark { color: var(--accent); font-weight: 600; }
+.item.bad { background: color-mix(in srgb, var(--danger) 8%, transparent); }
+#view.scr-batch { padding-bottom: calc(var(--tab-h) + 100px + env(safe-area-inset-bottom)); }
 .tag { font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; color: var(--sub); }
 .empty { text-align: center; padding-top: 48px; }
 
