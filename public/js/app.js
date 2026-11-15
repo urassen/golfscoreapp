@@ -13,6 +13,7 @@ import * as settings from './screens/settings.js';
 import * as courses from './screens/courses.js';
 import * as companions from './screens/companions.js';
 import * as backup from './screens/backup.js';
+import * as clubs from './screens/clubs.js';
 
 const routes = {
   home: { tab: 'home', ...pick(home) },
@@ -41,6 +42,7 @@ const routes = {
     enter: companions.enterEdit,
   },
   backup: { tab: 'settings', ...pick(backup) },
+  clubs: { tab: 'settings', ...pick(clubs) },
 };
 
 function pick(m) {

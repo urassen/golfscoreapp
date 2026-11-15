@@ -235,6 +235,7 @@ export async function onClick(e, arg) {
     hole.check = hole.check.filter((x) => x !== field);
   };
   openEditor({
+      clubs: getState().clubs,
     title: editorTitle(hole, field, viewPlayers(d)),
     field,
     par: hole.par,

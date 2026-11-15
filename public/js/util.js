@@ -25,7 +25,39 @@ export const sum = (a) => a.reduce((x, y) => x + y, 0);
 export const fmtDate = (d) => (d ? String(d).replace(/-/g, '/') : '');
 export const clone = (o) => JSON.parse(JSON.stringify(o));
 
-export const CLUBS = ['1W', '3W', '5W', 'U3', 'U4', '5i', '6i', '7i', '8i', '9i', 'PW', 'AW', 'SW', 'PT'];
+/** クラブ管理の初めの状態(版0.2.0までの固定の14種類)。 */
+export const DEFAULT_CLUBS = ['1W', '3W', '5W', 'U3', 'U4', '5i', '6i', '7i', '8i', '9i', 'PW', 'AW', 'SW', 'PT'];
+
+/** クラブ管理の候補(この順に並べる)。 */
+export const CLUB_CANDIDATES = [
+  '1W', '2W', '3W', '4W', '5W', '6W', '7W', '8W', '9W',
+  'U2', 'U3', 'U4', 'U5', 'U6', 'U7',
+  '3i', '4i', '5i', '6i', '7i', '8i', '9i',
+  'PW', 'AW', 'GW', 'SW', 'LW', 'PT',
+];
+
+/** クラブの照合用。全角半角・大文字小文字・空白を無視する。 */
+export function normClub(s) {
+  return String(s ?? '').normalize('NFKC').replace(/\s+/g, '').toUpperCase();
+}
+
+/** 登録済みのクラブの中から、同じクラブの表記を探す。なければ null。 */
+export function findClub(clubs, name) {
+  const n = normClub(name);
+  return (clubs || []).find((c) => normClub(c) === n) ?? null;
+}
+
+/** 候補の順に並べ、候補にない名前は後ろ(足した順)。 */
+export function sortClubs(list) {
+  const idx = (c) => {
+    const i = CLUB_CANDIDATES.findIndex((x) => normClub(x) === normClub(c));
+    return i < 0 ? CLUB_CANDIDATES.length : i;
+  };
+  return list
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => idx(a.c) - idx(b.c) || a.i - b.i)
+    .map((x) => x.c);
+}
 export const DIR_PAR45 = ['keep', 'left', 'right'];
 export const DIR_PAR3 = ['over', 'left', 'oneon', 'right', 'short'];
 const DIR_LABEL45 = { keep: 'FWキープ', left: 'FW左', right: 'FW右' };

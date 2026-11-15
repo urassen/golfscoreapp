@@ -90,6 +90,9 @@ test('版: 新しい版のデータは拒否し、同じ版はそのまま読む
   assert.throws(() => migrateData({}), (e) => e.code === 'noschema');
   assert.throws(() => migrateData(null), (e) => e.code === 'format');
   assert.deepEqual(migrateData({ schema: 1 }), emptyData());
+  // クラブ管理のない古いデータには、初めの14種類が入る
+  assert.equal(migrateData({ schema: 1, rounds: [] }).clubs.length, 14);
+  assert.deepEqual(migrateData({ schema: 1, clubs: ['1W', 'U5', ''] }).clubs, ['1W', 'U5']);
 });
 
 test('保存: 失敗したら元のデータのまま。読めない保存データは上書きしない', () => {

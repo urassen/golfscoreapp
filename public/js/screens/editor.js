@@ -1,5 +1,5 @@
 // セルをタップしたときの入力シート(大きな＋/－ボタン、選択ボタン)。
-import { CLUBS, dirChoices, dirLabel, esc, isNum } from '../util.js';
+import { DEFAULT_CLUBS, dirChoices, dirLabel, esc, isNum } from '../util.js';
 import { closeOverlay, openSheet } from '../ui.js';
 
 const STEP = {
@@ -16,6 +16,7 @@ const SELF_FIELDS = ['club', 'direction', 'bunker', 'ob', 'putt', 'penalty'];
  * o.field    項目(model.js の field)
  * o.par      そのホールのパー
  * o.value    今の値
+ * o.clubs    クラブの選択肢(クラブ管理の一覧)
  * o.checked  要確認の印が付いているか
  * o.onSave(value)  値を決めたとき(要確認の印は呼び出し側で外す)
  * o.onConfirm()    「確認済み」を押したとき
@@ -32,7 +33,9 @@ export function openEditor(o) {
       .map((v) => `<button class="btn big ${v === cur ? 'on' : ''}" data-v="${v}">${v}</button>`)
       .join('')}</div>`;
   } else if (f === 'club') {
-    body = `<div class="choices clubs">${CLUBS.map(
+    const clubs = [...(o.clubs || DEFAULT_CLUBS)];
+    if (cur && !clubs.includes(cur)) clubs.push(cur); // 登録にないクラブも、今の値として選べるように出す
+    body = `<div class="choices clubs">${clubs.map(
       (v) => `<button class="btn ${v === cur ? 'on' : ''}" data-v="${esc(v)}">${esc(v)}</button>`
     ).join('')}</div>`;
   } else if (f === 'direction') {

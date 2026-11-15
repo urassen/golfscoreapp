@@ -88,7 +88,8 @@ small { color: var(--sub); }
 .btn:disabled { opacity: .4; }
 .row { display: flex; gap: 8px; align-items: center; }
 .row.wrap { flex-wrap: wrap; }
-.row > select { flex: 1; min-width: 0; }
+.row > select, .row > input { flex: 1; min-width: 0; }
+.row > .btn { flex: none; white-space: nowrap; }
 
 .note { color: var(--sub); font-size: 14px; }
 .center { text-align: center; }

@@ -43,19 +43,36 @@ test('読めないデータは理由つきで拒否する', () => {
   assert.equal(reason(() => parseImport(text(noStroke))), 'strokes');
 });
 
-test('当てはまらないクラブ・方向は空欄にして要確認にする。バンカーの true/false は回数に直す', () => {
+test('方向が当てはまらないときは空欄にして要確認。バンカーの true/false は回数に直す', () => {
   const o = sampleImport();
-  o.holes[0].self.club = '4W';
   o.holes[0].self.direction = 'oneon'; // パー4にワンオンは合わない
   o.holes[0].self.bunker = true;
   o.holes[1].self.putt = null; // 話し忘れ
   const d = parseImport(text(o));
-  assert.equal(d.allHoles[0].self.club, null);
   assert.equal(d.allHoles[0].self.direction, null);
   assert.equal(d.allHoles[0].self.bunker, 1);
-  assert.ok(d.allHoles[0].check.includes('club') && d.allHoles[0].check.includes('direction'));
+  assert.ok(d.allHoles[0].check.includes('direction'));
   assert.equal(d.allHoles[1].self.putt, null);
   assert.ok(!d.allHoles[1].check.includes('putt')); // 空欄は要確認にしない
+});
+
+test('クラブは登録済みのクラブと照合する。登録にないクラブは値を残して要確認、「-」は空欄', () => {
+  const st = emptyData();
+  const o = sampleImport();
+  o.holes[0].self.club = 'U5'; // 初めの14種類にはない
+  o.holes[1].self.club = 'ｕ４'; // 全角・小文字でも U4 にそろえる
+  o.holes[3].self.club = '-'; // GDOの「-」は記録なし
+  const d = prepareDraft(st, parseImport(text(o)));
+  assert.equal(d.allHoles[0].self.club, 'U5');
+  assert.ok(d.allHoles[0].check.includes('club'));
+  assert.equal(d.allHoles[1].self.club, 'U4');
+  assert.ok(!d.allHoles[1].check.includes('club'));
+  assert.equal(d.allHoles[3].self.club, null);
+  assert.ok(!d.allHoles[3].check.includes('club'));
+
+  st.clubs.push('U5');
+  const d2 = prepareDraft(st, parseImport(text(o)));
+  assert.ok(!d2.allHoles[0].check.includes('club'));
 });
 
 test('名前の照合は空白・全角半角・大文字小文字を無視し、記号は残す', () => {

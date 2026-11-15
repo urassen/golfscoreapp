@@ -1,5 +1,5 @@
 // データ形式の版。古い版は読み込むたびにメモリ上で最新へ読み替える。
-import { isNum, clone } from './util.js';
+import { isNum, clone, DEFAULT_CLUBS } from './util.js';
 
 export const SCHEMA = 1;
 
@@ -11,7 +11,7 @@ export class AppError extends Error {
 }
 
 export function emptyData() {
-  return { schema: SCHEMA, courses: [], companions: [], rounds: [] };
+  return { schema: SCHEMA, courses: [], companions: [], rounds: [], clubs: [...DEFAULT_CLUBS] };
 }
 
 // 版を上げたら、ここに「n → n+1」の読み替えを足す。
@@ -41,6 +41,9 @@ export function migrateData(obj) {
   for (const k of ['courses', 'companions', 'rounds']) {
     if (!Array.isArray(d[k])) d[k] = [];
   }
+  // クラブ管理(版0.3.0から)。ないデータには初めの14種類を入れる。
+  if (!Array.isArray(d.clubs)) d.clubs = [...DEFAULT_CLUBS];
+  else d.clubs = d.clubs.filter((c) => typeof c === 'string' && c.trim() !== '');
   return d;
 }
 

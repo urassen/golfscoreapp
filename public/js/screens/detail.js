@@ -83,6 +83,7 @@ export async function onClick(e, id) {
     const hole = edit.round.holes[Number(td.dataset.h)];
     const field = td.dataset.f;
     openEditor({
+      clubs: getState().clubs,
       title: editorTitle(hole, field, playersOf(st, edit.round)),
       field,
       par: hole.par,

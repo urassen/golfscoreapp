@@ -1,7 +1,7 @@
 // 一括取り込みの処理(基本設計仕様書「5 一括取り込みの処理」の10段階)。
 // 画面にも保存にも依存しない。state は引数で受け取る。
 import { AppError, migrateImport } from './schema.js';
-import { CLUBS, DIR_PAR3, DIR_PAR45, clone, dirValid, isNum, normName, uid } from './util.js';
+import { DIR_PAR3, DIR_PAR45, clone, dirValid, findClub, isNum, normName, uid } from './util.js';
 import { strokeTotal } from './model.js';
 
 const posInt = (v) => (isNum(v) && Number.isInteger(v) && v > 0 ? v : null);
@@ -115,8 +115,10 @@ function roundDraft(src) {
     const src = h.self && typeof h.self === 'object' ? h.self : {};
     const self = { club: null, direction: null, bunker: null, ob: null, putt: null, penalty: null };
     if (src.club != null) {
-      if (CLUBS.includes(src.club)) self.club = src.club;
-      else check.add('club');
+      // クラブは書いてあるとおりに受け取り、登録済みのクラブとの照合は prepareDraft で行う。
+      const club = typeof src.club === 'string' ? src.club.normalize('NFKC').trim() : '';
+      if (club && club !== '-') self.club = club.slice(0, 12);
+      else if (!(typeof src.club === 'string' && (club === '' || club === '-'))) check.add('club');
     }
     if (src.direction != null) {
       const known = par == null ? [...DIR_PAR45, ...DIR_PAR3].includes(src.direction) : dirValid(par, src.direction);
@@ -201,6 +203,16 @@ export function matchCompanion(state, name) {
   return state.companions.find((c) => normName(c.name) === n) || null;
 }
 
+/** クラブを登録済みの表記にそろえる。登録にないクラブは値を残して要確認にする。 */
+export function checkClubs(state, d) {
+  for (const h of d.allHoles) {
+    if (h.self.club == null) continue;
+    const c = findClub(state.clubs, h.self.club);
+    if (c) h.self.club = c;
+    else if (!h.check.includes('club')) h.check.push('club');
+  }
+}
+
 /** コースのパー・ヤード数で、下書きの空欄を埋める。 */
 export function applyCourseDefaults(d, course) {
   if (!course) return;
@@ -214,6 +226,7 @@ export function applyCourseDefaults(d, course) {
 
 /** 段階5・6: 下書きに、コースと同伴者の照合結果を入れる。 */
 export function prepareDraft(state, d) {
+  checkClubs(state, d);
   const course = matchCourse(state, d.facility, draftNines(d), d.holeCount);
   d.courseSel = course ? course.id : 'new';
   applyCourseDefaults(d, course);
