@@ -27,7 +27,7 @@ export function render() {
       `<div><span>ベスト</span><b>${s.best}</b></div>` +
       `<div><span>パット</span><b>${num1(s.puttAvg)}</b></div></div></section>`;
     if (s.count >= 2) {
-      body += `<a class="card link" href="#/stats" aria-label="統計を開く"><h2>スコア推移</h2>${stackedBars(s.lines, { mini: true })}</a>`;
+      body += `<a class="card link" href="#/stats" aria-label="統計を開く"><h2>スコア推移</h2>${stackedBars(s.lines, { mini: true, avgTotal: s.avg, avgPutt: s.puttAvg })}</a>`;
     }
   }
   return `<header class="bar"><h1>ホーム</h1></header>${band()}${body}<a class="btn primary wide" href="#/import">取り込む</a>`;

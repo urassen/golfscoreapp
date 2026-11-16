@@ -20,6 +20,9 @@
   --sc-under: #fbd5dc;
   --sc-bogey: #dceaf7;
   --sc-double: #b9d3ec;
+  --in-other: #ffffff;
+  --in-putt: #1c3a2a;
+  --pavg: #2f6fb7;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -40,6 +43,9 @@
     --sc-under: #5a2a33;
     --sc-bogey: #1f3346;
     --sc-double: #2c4a66;
+    --in-other: #0c1410;
+    --in-putt: #e8eeea;
+    --pavg: #7fb2ec;
   }
 }
 * { box-sizing: border-box; }
@@ -213,8 +219,19 @@ tr.sub td { font-weight: 600; background: color-mix(in srgb, var(--line) 35%, tr
 .c-double { fill: var(--double); }
 .c-bunker { fill: var(--bogey); }
 .c-ob { fill: var(--double); }
-.c-label { fill: var(--sub); font-size: 10px; }
+.c-label { fill: var(--sub); font-size: 10px; paint-order: stroke; stroke: var(--card); stroke-width: 2.5px; stroke-linejoin: round; }
+.c-label.small { font-size: 8px; }
 .c-hit { fill: transparent; }
+.c-in-other { fill: var(--in-other); font-size: 9.5px; font-weight: 600; }
+.c-in-putt { fill: var(--in-putt); font-size: 9.5px; font-weight: 600; }
+.c-pavg { stroke: var(--pavg); }
+.c-avg { stroke: var(--text); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.c-pavg { stroke: var(--pavg); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.c-avg-label { font-size: 10px; font-weight: 700; paint-order: stroke; stroke: var(--card); stroke-width: 3px; stroke-linejoin: round; }
+.c-avg-t { fill: var(--text); }
+.c-pavg-t { fill: var(--pavg); }
+.lg.line { width: 16px; height: 0; border-radius: 0; border-top: 2px dashed var(--text); vertical-align: 3px; background: none; }
+.lg.line.p { border-top-color: var(--pavg); }
 .legend { font-size: 13px; color: var(--sub); }
 .lg { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 2px; }
 .lg.c-putt { background: var(--putt); }

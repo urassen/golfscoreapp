@@ -51,10 +51,10 @@ export function render() {
   let score = '<section class="card"><h2>■ スコア (自分)</h2>';
   if (graphs) {
     score +=
-      `<h3>合計スコアの推移</h3><div data-chart="1">${stackedBars(s.lines)}</div>` +
+      `<h3>合計スコアの推移</h3><div data-chart="1">${stackedBars(s.lines, { avgTotal: s.avg, avgPutt: s.puttAvg })}</div>` +
       `<p class="legend"><span class="lg c-other"></span>それ以外 <span class="lg c-putt"></span>パット${
         unknown ? ' <span class="lg c-unknown"></span>パット不明' : ''
-      }</p>${tapLine}`;
+      }<br><span class="lg line"></span>平均 <span class="lg line p"></span>パットの平均(右端の数字)</p>${tapLine}`;
   }
   score +=
     `<p>平均 <b>${num1(s.avg)}</b>　ベスト <b>${s.best}</b>　ラウンド数 <b>${s.count}</b></p>` +
